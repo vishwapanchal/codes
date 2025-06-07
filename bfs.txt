@@ -1,0 +1,49 @@
+import java.util.Scanner;
+
+public class BreadthFirstSearch {
+
+    public static void performBFS(int[][] adjacencyMatrix, int startVertex, int vertexCount) {
+        boolean[] visited = new boolean[vertexCount];
+        int[] queue = new int[vertexCount];
+        int front = 0, rear = 0;
+
+        // Enqueue starting vertex
+        queue[rear++] = startVertex;
+        visited[startVertex] = true;
+
+        System.out.print("BFS Traversal: ");
+
+        while (front < rear) {
+            int currentVertex = queue[front++]; // Dequeue
+            System.out.print(currentVertex + " ");
+
+            // Check adjacent vertices
+            for (int i = 0; i < vertexCount; i++) {
+                if (adjacencyMatrix[currentVertex][i] == 1 && !visited[i]) {
+                    queue[rear++] = i;
+                    visited[i] = true;
+                }
+            }
+        }
+    }
+
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+
+        System.out.print("Enter number of vertices: ");
+        int vertexCount = scanner.nextInt();
+
+        int[][] adjacencyMatrix = new int[vertexCount][vertexCount];
+        System.out.println("Enter adjacency matrix:");
+        for (int i = 0; i < vertexCount; i++) {
+            for (int j = 0; j < vertexCount; j++) {
+                adjacencyMatrix[i][j] = scanner.nextInt();
+            }
+        }
+
+        System.out.print("Enter starting vertex (0 to " + (vertexCount - 1) + "): ");
+        int startVertex = scanner.nextInt();
+
+        performBFS(adjacencyMatrix, startVertex, vertexCount);
+    }
+}
