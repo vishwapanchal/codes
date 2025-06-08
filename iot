@@ -1,0 +1,301 @@
+// Arduino IDE -> Upload
+int led1 = 2;
+int led2 = 3;
+int led3 = 4;
+
+void setup() {
+  pinMode(led1, OUTPUT);
+  pinMode(led2, OUTPUT);
+  pinMode(led3, OUTPUT);
+}
+
+void loop() {
+  digitalWrite(led1, HIGH);
+  delay(500);
+  digitalWrite(led1, LOW);
+  delay(500);
+
+  digitalWrite(led2, HIGH);
+  delay(1000);
+  digitalWrite(led2, LOW);
+  delay(1000);
+
+  digitalWrite(led3, HIGH);
+  delay(1500);
+  digitalWrite(led3, LOW);
+  delay(1500);
+}
+
+===================================================
+
+// Library: LiquidCrystal (built-in)
+// Arduino IDE -> Upload
+#include <LiquidCrystal.h>
+
+LiquidCrystal lcd(7, 8, 9, 10, 11, 12);
+
+int pulsePin = A0;
+int signal;               
+int threshold = 550;      
+int BPM;                  
+int beatCount = 0;
+unsigned long startTime = 0;
+
+void setup() {
+  pinMode(pulsePin, INPUT);
+  lcd.begin(16, 2);
+  lcd.print("Heart Rate:");
+  startTime = millis();
+}
+
+void loop() {
+  signal = analogRead(pulsePin);
+
+  if (signal > threshold) {
+    beatCount++;
+    delay(20);
+  }
+
+  if (millis() - startTime >= 10000) {
+    BPM = beatCount * 6;
+    lcd.setCursor(0, 1);
+    lcd.print("BPM: ");
+    lcd.print(BPM);
+    lcd.print("    ");
+    beatCount = 0;
+    startTime = millis();
+  }
+}
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+// ==================== PYTHON CODE ====================
+// Libraries: pip install pyserial psutil
+// Run: python filename.py
+
+import serial
+import psutil
+import time
+
+arduino = serial.Serial('COM3', 9600)  
+time.sleep(2)
+
+while True:
+    cpu = psutil.cpu_percent(interval=1)
+    memory = psutil.virtual_memory().percent
+    disk = psutil.disk_usage('/').percent
+    net = psutil.net_io_counters().bytes_sent + psutil.net_io_counters().bytes_recv
+
+    data = f"CPU: {cpu}%, MEM: {memory}%, DISK: {disk}%, NET: {net//1024} KB"
+    print("Sending:", data)
+    arduino.write((data + '\n').encode())
+    time.sleep(2)
+
+// ==================== ARDUINO CODE ====================
+// Arduino IDE -> Upload
+
+void setup() {
+  Serial.begin(9600);
+}
+
+void loop() {
+  if (Serial.available()) {
+    String data = Serial.readStringUntil('\n');
+    Serial.println("Received from PC: " + data);
+  }
+}
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// Arduino IDE -> Upload
+const int gasSensorPin = A0;
+const int buzzerPin = 8;
+
+int gasThreshold = 400;
+
+void setup() {
+  pinMode(buzzerPin, OUTPUT);
+  Serial.begin(9600);
+}
+
+void loop() {
+  int gasLevel = analogRead(gasSensorPin);
+  Serial.print("Gas Level: ");
+  Serial.println(gasLevel);
+
+  if (gasLevel > gasThreshold) {
+    digitalWrite(buzzerPin, HIGH);
+  } else {
+    digitalWrite(buzzerPin, LOW);
+  }
+
+  delay(500);
+}
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// Library: MPU6050 by Electronic Cats (Library Manager)
+// Arduino IDE -> Upload
+#include <Wire.h>
+#include <MPU6050.h>
+
+MPU6050 mpu;
+
+void setup() {
+  Serial.begin(9600);
+  Wire.begin();
+  mpu.initialize();
+
+  if (!mpu.testConnection()) {
+    Serial.println("MPU6050 connection failed!");
+    while (1);
+  } else {
+    Serial.println("MPU6050 connected.");
+  }
+}
+
+void loop() {
+  int16_t ax, ay, az;
+  mpu.getAcceleration(&ax, &ay, &az);
+
+  float axg = ax / 16384.0;
+  float ayg = ay / 16384.0;
+  float azg = az / 16384.0;
+
+  float pitch = atan2(axg, sqrt(ayg * ayg + azg * azg)) * 180 / PI;
+  float roll = atan2(ayg, sqrt(axg * axg + azg * azg)) * 180 / PI;
+
+  Serial.print("Pitch: ");
+  Serial.print(pitch);
+  Serial.print("°, Roll: ");
+  Serial.print(roll);
+  Serial.println("°");
+
+  delay(500);
+}
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+# Library: RPi.GPIO (pre-installed)
+# Run: python3 filename.py
+import RPi.GPIO as GPIO
+import time
+
+GPIO.setmode(GPIO.BCM)
+
+pir_pin = 17
+led_pin = 27
+
+GPIO.setup(pir_pin, GPIO.IN)
+GPIO.setup(led_pin, GPIO.OUT)
+
+print("PIR Sensor is warming up...")
+time.sleep(2)
+print("Ready. Monitoring motion...")
+
+try:
+    while True:
+        if GPIO.input(pir_pin):
+            print("Motion Detected!")
+            GPIO.output(led_pin, GPIO.HIGH)
+        else:
+            GPIO.output(led_pin, GPIO.LOW)
+        time.sleep(0.1)
+
+except KeyboardInterrupt:
+    print("Exiting program...")
+    GPIO.cleanup()
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+# Libraries: RPi.GPIO, smtplib, email (built-in)
+# Run: python3 filename.py
+import RPi.GPIO as GPIO
+import time
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+
+SENSOR_PIN = 17
+
+EMAIL_SENDER = 'your_email@gmail.com'
+EMAIL_PASSWORD = 'your_app_password'
+EMAIL_RECEIVER = 'receiver_email@example.com'
+
+GPIO.setmode(GPIO.BCM)
+GPIO.setup(SENSOR_PIN, GPIO.IN)
+
+def send_email():
+    subject = "Water Detected!"
+    body = "Alert: Water has been detected by the sensor on your Raspberry Pi."
+    
+    msg = MIMEMultipart()
+    msg['From'] = EMAIL_SENDER
+    msg['To'] = EMAIL_RECEIVER
+    msg['Subject'] = subject
+    msg.attach(MIMEText(body, 'plain'))
+    
+    try:
+        server = smtplib.SMTP('smtp.gmail.com', 587)
+        server.starttls()
+        server.login(EMAIL_SENDER, EMAIL_PASSWORD)
+        server.sendmail(EMAIL_SENDER, EMAIL_RECEIVER, msg.as_string())
+        server.quit()
+        print("Email sent successfully.")
+    except Exception as e:
+        print("Failed to send email:", e)
+
+try:
+    print("Monitoring water sensor...")
+    while True:
+        if GPIO.input(SENSOR_PIN) == 0:
+            print("Water Detected!")
+            send_email()
+            time.sleep(60)
+        time.sleep(1)
+except KeyboardInterrupt:
+    print("Exiting...")
+finally:
+    GPIO.cleanup()
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+# Setup Commands:
+# sudo apt-get update
+# sudo apt-get -y upgrade
+# sudo apt-get install python3-pip python3-venv python3-dev libgpiod2
+# sudo apt-get install libgpiod-dev
+# cd ~
+# python3 -m venv env --system-site-packages
+# source ~/env/bin/activate
+# pip3 install --upgrade pip setuptools wheel
+# pip3 install adafruit-python-shell
+# pip3 install adafruit-circuitpython-dht
+# wget https://raw.githubusercontent.com/adafruit/Raspberry-Pi-Installer-Scripts/master/raspi-blinka.py
+# sudo -E env PATH=$PATH python3 raspi-blinka.py
+# pip3 install flask RPLCD
+# Run: python3 filename.py
+from flask import Flask, render_template_string
+import Adafruit_DHT
+from RPLCD.i2c import CharLCD
+from time import sleep
+
+sensor = Adafruit_DHT.DHT11
+pin = 4
+
+lcd = CharLCD('PCF8574', 0x27)
+
+app = Flask(__name__)
+
+@app.route('/')
+def index():
+    humidity, temperature = Adafruit_DHT.read_retry(sensor, pin)
+    if humidity is not None and temperature is not None:
+        lcd.clear()
+        lcd.write_string(f'Temp: {temperature}C')
+        lcd.crlf()
+        lcd.write_string(f'Humidity: {humidity}%')
+        return render_template_string('''
+            <h1>Weather Station</h1>
+            <p><strong>Temperature:</strong> {{ temp }}°C</p>
+            <p><strong>Humidity:</strong> {{ hum }}%</p>
+        ''', temp=temperature, hum=humidity)
+    else:
+        return "Sensor read error"
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5000)
