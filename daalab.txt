@@ -1,0 +1,472 @@
+1) #include <stdio.h>
+
+int main(void)
+{
+    int n;          
+    int num;        
+    int max;        
+    int i;          
+
+    printf("Enter how many numbers: ");
+    scanf("%d", &n);
+
+    if (n <= 0) {                 
+        printf("Nothing to compare!\n");
+        return 0;
+    }
+
+    printf("Enter number 1: ");
+    scanf("%d", &num);
+    max = num;
+
+    for (i = 2; i <= n; ++i) {
+        printf("Enter number %d: ", i);
+        scanf("%d", &num);
+
+        if (num > max) {          
+            max = num;
+        }
+    }
+
+    printf("Maximum = %d\n", max);
+    return 0;
+}
+
+
+
+
+2)#include <stdio.h>
+
+long long factorial(int n)
+{
+    if (n <= 1)              
+        return 1;
+    return n * factorial(n - 1);
+}
+
+void hanoi(int n, char src, char aux, char dest)
+{
+    if (n == 0) return;      
+
+    hanoi(n - 1, src, dest, aux);                         
+    printf("Move disk %d from %c -> %c\n", n, src, dest); 
+    hanoi(n - 1, aux, src, dest);                         
+}
+
+int main(void)
+{
+    int num;
+    printf("Enter a positive integer for factorial: ");
+    scanf("%d", &num);
+    printf("%d! = %lld\n\n", num, factorial(num));
+
+    int disks;
+    printf("Enter number of disks for Tower of Hanoi: ");
+    scanf("%d", &disks);
+    printf("\nSteps to solve Tower of Hanoi with %d disks:\n", disks);
+    hanoi(disks, 'A', 'B', 'C');  
+
+    return 0;
+}
+
+
+
+3)#include <stdio.h>
+#include <stdlib.h>
+
+void swap(int *a, int *b) {
+    int t = *a; *a = *b; *b = t;
+}
+
+int partition(int arr[], int low, int high) {
+    int pivot = arr[high];
+    int i = low - 1;
+    for (int j = low; j < high; ++j) {
+        if (arr[j] < pivot) {
+            ++i;
+            swap(&arr[i], &arr[j]);
+        }
+    }
+    swap(&arr[i + 1], &arr[high]);
+    return i + 1;
+}
+
+void quickSort(int arr[], int low, int high) {
+    if (low < high) {
+        int pi = partition(arr, low, high);
+        quickSort(arr, low, pi - 1);
+        quickSort(arr, pi + 1, high);
+    }
+}
+
+int main() {
+    int n;
+    printf("Quick Sort\nEnter number of elements: ");
+    if (scanf("%d", &n) != 1 || n <= 0) return 0;
+    int *arr = malloc(n * sizeof(int));
+    printf("Enter %d integers:\n", n);
+    for (int i = 0; i < n; i++) scanf("%d", &arr[i]);
+
+    quickSort(arr, 0, n - 1);
+
+    printf("Sorted array:\n");
+    for (int i = 0; i < n; i++) printf("%d ", arr[i]);
+    printf("\n");
+    free(arr);
+    return 0;
+}
+
+
+4)#include <stdio.h>
+
+#define N 100
+
+int graph[N][N], visited[N], queue[N], n, front = 0, rear = 0;
+
+void bfs(int start) {
+    visited[start] = 1;
+    queue[rear++] = start;
+
+    while (front < rear) {
+        int node = queue[front++];
+        printf("%d ", node);
+
+        for (int i = 0; i < n; i++) {
+            if (graph[node][i] && !visited[i]) {
+                visited[i] = 1;
+                queue[rear++] = i;
+            }
+        }
+    }
+}
+
+int main() {
+    int edges, u, v, start;
+    printf("Enter number of nodes and edges: ");
+    scanf("%d %d", &n, &edges);
+    
+    for (int i = 0; i < edges; i++) {
+        scanf("%d %d", &u, &v);
+        graph[u][v] = graph[v][u] = 1;  // undirected
+    }
+
+    printf("Enter starting node: ");
+    scanf("%d", &start);
+    printf("BFS traversal: ");
+    bfs(start);
+    return 0;
+}
+
+
+
+5)#include <stdio.h>
+#include <stdlib.h>      
+
+int cmpInt(const void *a, const void *b)
+{
+    int x = *(const int *)a;
+    int y = *(const int *)b;
+    return (x > y) - (x < y);   
+}
+
+int main(void)
+{
+    int n;
+    printf("How many numbers? ");
+    if (scanf("%d", &n) != 1 || n <= 0) {
+        puts("Invalid size!");
+        return 0;
+    }
+
+    int arr[n];
+    printf("Enter %d integers:\n", n);
+    for (int i = 0; i < n; ++i) scanf("%d", &arr[i]);
+
+    qsort(arr, n, sizeof(int), cmpInt);
+
+    int unique = 1;                      
+    for (int i = 1; i < n; ++i) {
+        if (arr[i] == arr[i - 1]) {      
+            unique = 0;
+            break;
+        }
+    }
+
+    if (unique)
+        puts("All elements are UNIQUE.");
+    else
+        puts("Duplicates FOUND in the array.");
+
+    return 0;
+}
+
+
+
+
+6)#include <stdio.h>
+#include <string.h>   
+#include <limits.h>   
+
+#define ALPHABET 256   
+
+void buildShift(const char *pat, int m, int shift[])
+{
+    for (int c = 0; c < ALPHABET; ++c)   
+        shift[c] = m;
+
+    for (int i = 0; i < m - 1; ++i)      
+        shift[(unsigned char)pat[i]] = m - 1 - i;
+}
+
+int horspool(const char *text, const char *pat)
+{
+    int n = strlen(text);
+    int m = strlen(pat);
+    if (m == 0 || m > n) return -1;
+
+    int shift[ALPHABET];
+    buildShift(pat, m, shift);
+
+    int i = m - 1;                       
+    while (i < n) {
+        int k = 0;                       
+        while (k < m && pat[m - 1 - k] == text[i - k])
+            ++k;                         
+
+        if (k == m)                      
+            return i - m + 1;
+
+        i += shift[(unsigned char)text[i]];  
+    }
+    return -1;                           
+}
+
+int main(void)
+{
+    char text[200], pat[50];
+    printf("Text   : "); fgets(text, sizeof(text), stdin);
+    printf("Pattern: "); fgets(pat,  sizeof(pat),  stdin);
+
+    text[strcspn(text, "\n")] = pat[strcspn(pat, "\n")] = '\0';
+
+    int pos = horspool(text, pat);
+    if (pos == -1)
+        puts("Pattern NOT found.");
+    else
+        printf("Pattern found at index %d.\n", pos);
+
+    return 0;
+}
+
+
+
+
+7)#include <stdio.h>
+#include <string.h>          
+
+#define MAX_ITEMS   100
+#define MAX_CAP     1000
+
+int main(void)
+{
+    int n, W;
+    int wt[MAX_ITEMS], val[MAX_ITEMS];
+    int dp[MAX_CAP + 1];     
+
+    printf("Enter number of items (≤ %d): ", MAX_ITEMS);
+    scanf("%d", &n);
+
+    printf("Enter knapsack capacity (≤ %d): ", MAX_CAP);
+    scanf("%d", &W);
+
+    puts("Enter weight and value of each item:");
+    for (int i = 0; i < n; ++i)
+        scanf("%d %d", &wt[i], val[i]);
+
+    memset(dp, 0, sizeof(dp));   
+
+    for (int i = 0; i < n; ++i) {
+        for (int w = W; w >= wt[i]; --w) { 
+            int take = val[i] + dp[w - wt[i]];
+            if (take > dp[w]) dp[w] = take;
+        }
+    }
+
+    printf("Maximum value = %d\n", dp[W]);
+    return 0;
+}
+
+
+
+
+
+8)#include <stdio.h>
+
+#define INF  1e9      
+#define MAX  100      
+
+void dijkstra(int n, int src, int cost[MAX][MAX], int dist[MAX])
+{
+    int visited[MAX] = {0};
+
+    for (int i = 0; i < n; ++i) dist[i] = INF;
+    dist[src] = 0;
+
+    for (int step = 0; step < n - 1; ++step) {
+        int u = -1;
+        for (int i = 0; i < n; ++i)
+            if (!visited[i] && (u == -1 || dist[i] < dist[u]))
+                u = i;
+
+        if (u == -1) break;          
+
+        visited[u] = 1;
+
+        for (int v = 0; v < n; ++v)
+            if (!visited[v] && cost[u][v] != INF &&
+                dist[u] + cost[u][v] < dist[v])
+                dist[v] = dist[u] + cost[u][v];
+    }
+}
+
+int main(void)
+{
+    int n;
+    int cost[MAX][MAX];
+    int dist[MAX];
+    int src;
+
+    printf("Number of vertices (≤ %d): ", MAX);
+    scanf("%d", &n);
+
+    puts("Enter adjacency matrix (INF=9999 for no edge):");
+    for (int i = 0; i < n; ++i)
+        for (int j = 0; j < n; ++j) {
+            scanf("%d", &cost[i][j]);
+            if (cost[i][j] == 9999) cost[i][j] = INF;
+        }
+
+    printf("Source vertex (0-based): ");
+    scanf("%d", &src);
+
+    dijkstra(n, src, cost, dist);
+
+    puts("\nShortest distances:");
+    for (int i = 0; i < n; ++i)
+        printf("src -> %d : %d\n", i, dist[i] == INF ? -1 : dist[i]);
+
+    return 0;
+}
+
+
+
+
+
+9)#include <stdio.h>
+
+#define MAX  30                 
+
+int n, M;                       
+int w[MAX];                     
+int x[MAX];                     
+
+void printSubset(void)          
+{
+    printf("{ ");
+    for (int i = 0; i < n; ++i)
+        if (x[i]) printf("%d ", w[i]);
+    puts("}");
+}
+
+void sumSubset(int i, int currSum, int remSum)
+{
+    if (currSum == M) {         
+        printSubset();
+        return;                 
+    }
+    if (i == n || currSum + remSum < M)  
+        return;
+
+    if (currSum + w[i] <= M) {
+        x[i] = 1;
+        sumSubset(i + 1, currSum + w[i], remSum - w[i]);
+    }
+
+    x[i] = 0;
+    sumSubset(i + 1, currSum, remSum - w[i]);
+}
+
+int main(void)
+{
+    printf("Enter number of items (≤ %d): ", MAX);
+    scanf("%d", &n);
+
+    printf("Enter target sum M: ");
+    scanf("%d", &M);
+
+    puts("Enter each item's weight:");
+    int total = 0;
+    for (int i = 0; i < n; ++i) {
+        scanf("%d", &w[i]);
+        total += w[i];
+        x[i] = 0;               
+    }
+
+    puts("\nSubsets summing to M:");
+    sumSubset(0, 0, total);
+
+    return 0;
+}
+
+
+
+
+10)#include <stdio.h>
+#include <limits.h>
+
+#define N 10
+
+int n, cost[N][N], used[N], assign[N], bestAssign[N], best = INT_MAX;
+
+int lowerBound(int row, int cur) {
+    int b = cur;
+    for (int r = row; r < n; r++) {
+        int m = INT_MAX;
+        for (int c = 0; c < n; c++)
+            if (!used[c] && cost[r][c] < m) m = cost[r][c];
+        b += m;
+    }
+    return b;
+}
+
+void solve(int row, int cur) {
+    if (row == n) {
+        if (cur < best) {
+            best = cur;
+            for (int i = 0; i < n; i++) bestAssign[i] = assign[i];
+        }
+        return;
+    }
+    if (lowerBound(row, cur) >= best) return;
+    for (int c = 0; c < n; c++) {
+        if (!used[c]) {
+            used[c] = 1;
+            assign[row] = c;
+            solve(row + 1, cur + cost[row][c]);
+            used[c] = 0;
+        }
+    }
+}
+
+int main() {
+    printf("Enter number of tasks/workers: ");
+    scanf("%d", &n);
+    printf("Enter cost matrix (%d x %d):\n", n, n);
+    for (int i = 0; i < n * n; i++)
+        scanf("%d", &cost[i / n][i % n]);
+    solve(0, 0);
+    printf("\nMinimum cost: %d\n", best);
+    for (int i = 0; i < n; i++)
+        printf("Worker %d -> Task %d\n", i, bestAssign[i]);
+    return 0;
+}
