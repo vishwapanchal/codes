@@ -1,0 +1,493 @@
+//Merge
+
+#include <iostream>
+#include <vector>
+using namespace std;
+
+// Merges two sorted subarrays arr[l..m] and arr[m+1..r]
+void merge(vector<int>& arr, int l, int m, int r) {
+    int n1 = m - l + 1;
+    int n2 = r - m;
+    vector<int> L(n1), R(n2);
+
+    // Copy data to temp arrays L[] and R[]
+    for (int i = 0; i < n1; i++) 
+        L[i] = arr[l + i];
+    for (int j = 0; j < n2; j++) 
+        R[j] = arr[m + 1 + j];
+
+    // Merge the temp arrays back into arr[l..r]
+    int i = 0, j = 0, k = l;
+    while (i < n1 && j < n2) {
+        if (L[i] <= R[j]) {
+            arr[k++] = L[i++];
+        } else {
+            arr[k++] = R[j++];
+        }
+    }
+    // Copy any remaining elements of L[]
+    while (i < n1) 
+        arr[k++] = L[i++];
+    // Copy any remaining elements of R[]
+    while (j < n2) 
+        arr[k++] = R[j++];
+}
+
+// Recursive merge-sort on arr[l..r]
+void mergeSort(vector<int>& arr, int l, int r) {
+    if (l < r) {
+        int m = l + (r - l) / 2;     // Avoids overflow
+        mergeSort(arr, l, m);        // Sort first half
+        mergeSort(arr, m + 1, r);    // Sort second half
+        merge(arr, l, m, r);         // Merge them
+    }
+}
+
+int main() {
+    int n;
+    cout << "Enter number of elements: ";
+    cin >> n;
+
+    vector<int> arr(n);
+    cout << "Enter " << n << " integers:\n";
+    for (int i = 0; i < n; i++) {
+        cin >> arr[i];
+    }
+
+    mergeSort(arr, 0, n - 1);
+
+    cout << "Sorted array: ";
+    for (int x : arr) 
+        cout << x << " ";
+    cout << "\n";
+
+    return 0;
+}
+
+
+//Topological 
+
+#include <iostream>
+#include <vector>
+#include <algorithm>
+using namespace std;
+
+// Recursive DFS that visits 'node' and pushes onto 'order' post‐visit
+void dfs(int node, const vector<vector<int>>& adj, vector<bool>& visited, vector<int>& order) {
+    visited[node] = true;
+    for (int nbr : adj[node]) {
+        if (!visited[nbr]) {
+            dfs(nbr, adj, visited, order);
+        }
+    }
+    order.push_back(node);  // add after exploring all descendants
+}
+
+// Returns a topological sort of the DAG in 'adj'
+vector<int> topologicalSort(const vector<vector<int>>& adj) {
+    int n = adj.size();
+    vector<bool> visited(n, false);
+    vector<int> order;
+    for (int i = 0; i < n; i++) {
+        if (!visited[i]) {
+            dfs(i, adj, visited, order);
+        }
+    }
+    reverse(order.begin(), order.end());
+    return order;
+}
+
+int main() {
+    int n, m;
+    cout << "Enter number of vertices: ";
+    cin >> n;
+    cout << "Enter number of edges: ";
+    cin >> m;
+
+    vector<vector<int>> adj(n);
+    cout << "Enter each directed edge as two integers u v (0 ≤ u,v < " << n << "):\n";
+    for (int i = 0; i < m; i++) {
+        int u, v;
+        cin >> u >> v;
+        // edge from u to v
+        adj[u].push_back(v);
+    }
+
+    vector<int> topo = topologicalSort(adj);
+
+    cout << "Topological Sort order:\n";
+    for (int x : topo) {
+        cout << x << " ";
+    }
+    cout << "\n";
+    return 0;
+}
+
+
+//Element Uniqeness
+
+#include <iostream>
+#include <vector>
+#include <algorithm>
+using namespace std;
+
+// Returns true if all elements in 'arr' are unique, false otherwise
+bool checkUnique(vector<int>& arr) {
+    sort(arr.begin(), arr.end());  // Sort the array
+    for (int i = 1; i < arr.size(); i++) {
+        if (arr[i] == arr[i - 1]) {
+            return false;  // Found a duplicate
+        }
+    }
+    return true;  // No duplicates found
+}
+
+int main() {
+    int n;
+    cout << "Enter number of elements: ";
+    cin >> n;
+
+    vector<int> arr(n);
+    cout << "Enter " << n << " integers:\n";
+    for (int i = 0; i < n; i++) {
+        cin >> arr[i];
+    }
+
+    if (checkUnique(arr)) {
+        cout << "All elements are unique.\n";
+    } else {
+        cout << "Duplicates found.\n";
+    }
+
+    return 0;
+}
+
+//HorsePool
+
+#include <iostream>
+#include <string>
+#include <unordered_map>
+using namespace std;
+
+// Build the shift table for Horspool's algorithm
+unordered_map<char, int> buildShiftTable(const string& pattern) {
+    int m = pattern.size();
+    unordered_map<char, int> shift;
+
+    // Initialize all shifts to pattern length
+    for (int c = 0; c < 128; c++) {
+        shift[(char)c] = m;
+    }
+    // Populate shifts based on pattern characters (except last)
+    for (int i = 0; i < m - 1; i++) {
+        shift[pattern[i]] = m - 1 - i;
+    }
+    return shift;
+}
+
+// Returns the index of the first match or -1 if not found
+int horspoolSearch(const string& text, const string& pattern) {
+    int n = text.size(), m = pattern.size();
+    if (m == 0) return 0;        // Empty pattern matches at 0
+    if (m > n)  return -1;       // Pattern longer than text
+
+    auto shift = buildShiftTable(pattern);
+    int i = m - 1;               // Index in text aligned with pattern end
+
+    while (i < n) {
+        int k = 0;
+        // Compare pattern from end backwards
+        while (k < m && pattern[m - 1 - k] == text[i - k]) {
+            k++;
+        }
+        if (k == m) {
+            return i - m + 1;   // Match found
+        }
+        // Shift according to the bad-character rule
+        i += shift[text[i]];
+    }
+    return -1;                    // No match
+}
+
+int main() {
+    string text, pattern;
+
+    cout << "Enter the text:\n";
+    getline(cin, text);
+
+    cout << "Enter the pattern to search for:\n";
+    getline(cin, pattern);
+
+    int pos = horspoolSearch(text, pattern);
+    if (pos != -1) {
+        cout << "Pattern found at index: " << pos << "\n";
+    } else {
+        cout << "Pattern not found in the text.\n";
+    }
+
+    return 0;
+}
+
+//knapsack
+
+#include <iostream>
+#include <vector>
+#include <algorithm>
+using namespace std;
+
+// Bottom-up DP for 0/1 Knapsack: returns max value for capacity W
+int knapsackDP(int W, const vector<int>& wt, const vector<int>& val, int n) {
+    vector<vector<int>> dp(n + 1, vector<int>(W + 1, 0));
+    for (int i = 1; i <= n; i++) {
+        for (int w = 0; w <= W; w++) {
+            if (wt[i - 1] <= w) {
+                dp[i][w] = max(val[i - 1] + dp[i - 1][w - wt[i - 1]],
+                               dp[i - 1][w]);
+            } else {
+                dp[i][w] = dp[i - 1][w];
+            }
+        }
+    }
+    return dp[n][W];
+}
+
+int main() {
+    int n, W;
+    cout << "Enter number of items: ";
+    cin >> n;
+
+    vector<int> wt(n), val(n);
+    cout << "Enter weights of " << n << " items:\n";
+    for (int i = 0; i < n; i++) {
+        cin >> wt[i];
+    }
+
+    cout << "Enter values of " << n << " items:\n";
+    for (int i = 0; i < n; i++) {
+        cin >> val[i];
+    }
+
+    cout << "Enter knapsack capacity: ";
+    cin >> W;
+
+    // Sample input for testing:
+    // n = 4
+    // weights: 2 1 3 2
+    // values: 8 6 16 11
+    // capacity: 5
+
+    int maxValue = knapsackDP(W, wt, val, n);
+    cout << "Maximum value in Knapsack = " << maxValue << "\n";
+
+    return 0;
+}
+
+
+//Dijktra
+#include <iostream>
+#include <vector>
+#include <limits>
+using namespace std;
+
+const int INF = numeric_limits<int>::max();
+
+// Dijkstra's algorithm using adjacency matrix
+void dijkstra(int src, const vector<vector<int>>& graph, vector<int>& dist) {
+    int V = graph.size();
+    vector<bool> visited(V, false);
+    dist.assign(V, INF);
+    dist[src] = 0;
+
+    for (int count = 0; count < V - 1; count++) {
+        int u = -1;
+        int minDist = INF;
+
+        // Find the unvisited node with the smallest distance
+        for (int i = 0; i < V; i++) {
+            if (!visited[i] && dist[i] < minDist) {
+                minDist = dist[i];
+                u = i;
+            }
+        }
+
+        if (u == -1) break; // No more reachable nodes
+        visited[u] = true;
+
+        // Update distances to neighbors
+        for (int v = 0; v < V; v++) {
+            if (!visited[v] && graph[u][v] != 0 && dist[u] + graph[u][v] < dist[v]) {
+                dist[v] = dist[u] + graph[u][v];
+            }
+        }
+    }
+}
+
+int main() {
+    int V;
+    cout << "Enter number of vertices: ";
+    cin >> V;
+
+    vector<vector<int>> graph(V, vector<int>(V));
+    cout << "Enter the adjacency matrix (0 if no edge):\n";
+    for (int i = 0; i < V; i++) {
+        for (int j = 0; j < V; j++) {
+            cin >> graph[i][j];
+        }
+    }
+
+    int src;
+    cout << "Enter source vertex (0 to " << V - 1 << "): ";
+    cin >> src;
+
+    vector<int> dist;
+    dijkstra(src, graph, dist);
+
+    cout << "\nShortest distances from vertex " << src << ":\n";
+    for (int i = 0; i < V; i++) {
+        cout << "  to " << i << " = ";
+        if (dist[i] == INF) cout << "INF\n";
+        else                cout << dist[i] << "\n";
+    }
+
+    return 0;
+}
+
+
+//Nqueens
+
+#include <iostream>
+#include <vector>
+using namespace std;
+
+bool isSafe(int row, int col, const vector<int>& queens) {
+    for (int i = 0; i < row; i++) {
+        if (queens[i] == col || abs(queens[i] - col) == row - i)
+            return false;
+    }
+    return true;
+}
+
+bool solveNQueens(int n, int row, vector<int>& queens) {
+    if (row == n) return true;
+
+    for (int col = 0; col < n; col++) {
+        if (isSafe(row, col, queens)) {
+            queens[row] = col;
+            if (solveNQueens(n, row + 1, queens)) return true;
+        }
+    }
+    return false;
+}
+
+int main() {
+    int n;
+    cout << "Enter the value of N for N-Queens: ";
+    cin >> n;
+
+    vector<int> queens(n, -1);
+
+    // Sample input for testing:
+    // n = 4 (classic 4-Queens problem)
+    // Expected output: One valid solution
+
+    if (solveNQueens(n, 0, queens)) {
+        cout << "One solution for " << n << "-Queens:\n";
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < n; j++) {
+                cout << (queens[i] == j ? "Q " : ". ");
+            }
+            cout << "\n";
+        }
+    } else {
+        cout << "No solution found.\n";
+    }
+
+    return 0;
+}
+
+//Assignment
+
+#include <iostream>
+#include <vector>
+#include <climits>
+using namespace std;
+
+int n;
+vector<vector<int>> cost;
+vector<bool> colUsed;
+vector<int> assignment, bestAssignment;
+int bestCost = INT_MAX;
+
+// Estimate a lower bound on total cost by adding, for each remaining row,
+// the minimum cost among unused columns.
+int lowerBound(int row, int currentCost) {
+    int bound = currentCost;
+    for (int r = row; r < n; r++) {
+        int minCost = INT_MAX;
+        for (int c = 0; c < n; c++) {
+            if (!colUsed[c] && cost[r][c] < minCost) {
+                minCost = cost[r][c];
+            }
+        }
+        bound += minCost;
+    }
+    return bound;
+}
+
+// Recursive branch-and-bound search
+void solve(int row, int currentCost) {
+    if (row == n) {
+        // All rows assigned
+        if (currentCost < bestCost) {
+            bestCost = currentCost;
+            bestAssignment = assignment;
+        }
+        return;
+    }
+    // Prune if even the optimistic lower bound is not better
+    if (lowerBound(row, currentCost) >= bestCost) 
+        return;
+
+    for (int c = 0; c < n; c++) {
+        if (!colUsed[c]) {
+            colUsed[c] = true;
+            assignment[row] = c;
+            solve(row + 1, currentCost + cost[row][c]);
+            colUsed[c] = false;
+        }
+    }
+}
+
+int main() {
+    cout << "Enter number of tasks/workers: ";
+    cin >> n;
+
+    cost.assign(n, vector<int>(n));
+    cout << "Enter cost matrix (" << n << " x " << n << "):\n";
+    for (int i = 0; i < n; i++) {
+        for (int j = 0; j < n; j++) {
+            cin >> cost[i][j];
+        }
+    }
+
+    // Sample input for testing:
+    // n = 4
+    // Cost matrix:
+    // 9 2 7 8
+    // 6 4 3 7
+    // 5 8 1 8
+    // 7 6 9 4
+
+    colUsed.assign(n, false);
+    assignment.assign(n, -1);
+    bestAssignment.assign(n, -1);
+
+    solve(0, 0);
+
+    cout << "\nMinimum assignment cost = " << bestCost << "\n";
+    cout << "Assignment (worker -> task):\n";
+    for (int i = 0; i < n; i++) {
+        cout << "  Worker " << i << " -> Task " << bestAssignment[i] << "\n";
+    }
+    return 0;
+}
